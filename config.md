@@ -1,136 +1,139 @@
-# Voice Review with AI Assistant - Configuration
+# Voice Review - Complete Implementation Configuration
 
-This add-on enables hands-free flashcard review using voice commands and ElevenLabs conversational AI.
+## 🎯 Overview
+This add-on provides **complete automatic voice control injection** into all your Anki cards. No manual template editing required!
 
-## Basic Settings
+## 📋 Prerequisites
 
-### Auto-start MCP Server
-- **Default**: `true`
-- **Description**: Automatically start the MCP server when Anki launches
-- **Note**: The MCP server is required for AI assistant integration
+### 1. AnkiConnect Add-on
+**REQUIRED**: Install AnkiConnect (Code: **2055492159**)
+- Go to Tools → Add-ons → Get Add-ons
+- Enter code: `2055492159`
+- Restart Anki
 
-### Show Voice Assistant
-- **Default**: `true`  
-- **Description**: Show voice control widgets and assistant interface
-- **Note**: Can be toggled from the Tools menu
+### 2. ElevenLabs API Key
+**REQUIRED**: Set your ElevenLabs API key as an environment variable:
 
-### ElevenLabs Agent ID
-- **Default**: `"agent_5301k0wccfefeaxtkqr0kce7v66a"`
-- **Description**: Your ElevenLabs conversational agent ID
-- **Note**: Replace with your own agent ID if using a custom agent
+**macOS/Linux:**
+```bash
+export ELEVENLABS_API_KEY="your_api_key_here"
+```
 
-### MCP Server Port
-- **Default**: `8000`
-- **Description**: Port for the MCP server to listen on
-- **Warning**: Change only if port 8000 is already in use
+**Windows:**
+```cmd
+set ELEVENLABS_API_KEY=your_api_key_here
+```
 
-### Auto-start from Cards
-- **Default**: `true`
-- **Description**: Allow voice controls on cards to automatically start the MCP server
-- **Note**: Enables seamless "one-click" voice sessions
+**Permanent Setup (recommended):**
+Add to your shell profile (~/.bashrc, ~/.zshrc, etc.)
 
-## Voice Recognition
+## 🚀 How It Works
 
-### Widget Type
-- **Options**: `"sidebar"`, `"floating"`, `"popup"`
-- **Default**: `"sidebar"`
-- **Description**: How voice controls are displayed in the interface
+### Automatic Injection
+- Voice controls are **automatically injected** into ALL cards
+- No manual template editing required
+- Works with any card type or layout
+- Appears as a floating panel on every card
 
-### Recognition Language
-- **Default**: `"en-US"`
-- **Description**: Language for speech recognition
-- **Supported**: Any language supported by browser speech recognition
+### Voice Commands
+**Navigation:**
+- "show answer" - Reveal the answer
+- "next card" - Move to next card
 
-## Natural Language Mappings
+**Rating (Natural Language):**
+- "I forgot" / "again" - Rate as Again (1)
+- "hard" / "difficult" - Rate as Hard (2)
+- "got it" / "correct" - Rate as Good (3)
+- "easy" / "perfect" - Rate as Easy (4)
 
-The add-on understands natural language responses for card ratings:
-
-### "Again" (Rating: 1)
-- "again", "repeat", "forgot", "missed", "no"
-- "totally forgot", "completely forgot", "no idea" 
-- "blank", "drawing a blank", "clueless"
-
-### "Hard" (Rating: 2)  
-- "hard", "difficult", "struggled", "almost"
-- "pretty hard", "took a while", "challenging"
-- "eventually got it", "figured it out"
-
-### "Good" (Rating: 3)
-- "good", "correct", "yes", "got it", "remembered"
-- "knew that", "right answer", "of course"
-- "recognized it", "came to me"
-
-### "Easy" (Rating: 4)
-- "easy", "perfect", "instant", "obvious", "simple"
-- "immediately", "too simple", "way too easy"
-- "piece of cake", "no problem", "super obvious"
-
-## UI Settings
-
-### Show Status Indicator
-- **Default**: `true`
-- **Description**: Display connection status and voice session state
-
-### Show Session Stats
-- **Default**: `true`
-- **Description**: Show cards reviewed, accuracy, and session duration
-
-### Minimizable Panel
-- **Default**: `true`
-- **Description**: Allow double-click to minimize voice control panel
-
-### Panel Position
-- **Default**: `"bottom-right"`
-- **Options**: `"bottom-right"`, `"bottom-left"`, `"top-right"`, `"top-left"`
-- **Description**: Where to position the voice control panel
-
-## Troubleshooting
-
-### Common Issues
-
-**Voice commands not working:**
-- Ensure microphone permissions are granted
-- Use Chrome or Edge browser for best speech recognition
-- Check that MCP server is running (green status indicator)
-
-**"MCP Server not connected" error:**
-- Click "Start Voice" to auto-start the server
-- Manually start from Tools → Voice Review → Start MCP Server
-- Check that port 8000 is available
-
-**ElevenLabs agent not responding:**
-- Verify your `elevenlabs_agent_id` is correct
-- Ensure you have an active ElevenLabs subscription
-- Check internet connection for API access
-
-### Reset to Defaults
-
-To reset all settings to defaults, click "Restore Defaults" in the add-on configuration dialog.
-
-## Voice Commands
-
-### Navigation
-- "next card" / "continue" / "next" → Advance to next card
-- "show answer" / "reveal" / "answer" → Show the answer
-
-### Session Control  
-- "start" / "begin" → Start voice session
-- "stop" / "end session" → Stop voice session
-
-### Rating (Natural Language)
-- "I forgot" → Again (1)
-- "pretty hard" → Hard (2)
-- "got it" → Good (3) 
-- "too easy" → Easy (4)
+**Audio:**
+- "read card" - Text-to-speech of card content
+- "repeat" - Read card again
+- "help" - Show available commands
 
 ### Keyboard Shortcuts
-- **Ctrl+V**: Toggle voice session
-- **Ctrl+N**: Next card (during session)
-- **Ctrl+S**: Show answer (during session)
+- **Ctrl+V** - Start/stop voice session
+- **Ctrl+R** - Read current card
 
-## Support
+## 🔧 Configuration Options
 
-For support, feature requests, or bug reports, please visit:
-https://github.com/matheus-rech/anki-voice-review
+### Voice Settings
+- **voice_id**: ElevenLabs voice ID (default: cgSgspJ2msm6clMCkdW9)
+- **auto_injection**: Automatic injection enabled (default: true)
+- **voice_recognition_language**: Speech recognition language (default: en-US)
 
-**Perfect for commute studying and hands-free learning!** 🎤 
+### UI Settings
+- **panel_position**: Voice panel position (default: bottom-right)
+- **show_session_stats**: Show session statistics (default: true)
+- **voice_feedback**: Enable voice feedback (default: true)
+- **auto_read_cards**: Auto-read cards on display (default: false)
+- **show_keyboard_shortcuts**: Display shortcuts in help (default: true)
+
+### Technical Settings
+- **ankiconnect_url**: AnkiConnect API URL (default: http://localhost:8765)
+- **elevenlabs_base_url**: ElevenLabs API base URL
+- **speech_recognition_continuous**: Continuous speech recognition (default: true)
+- **tts_text_limit**: Text-to-speech character limit (default: 500)
+
+### Natural Language Mappings
+Extensive natural language understanding for card ratings:
+- **again**: "forgot", "missed", "no", "wrong", etc.
+- **hard**: "difficult", "struggled", "challenging", etc.  
+- **good**: "correct", "yes", "got it", "right", etc.
+- **easy**: "perfect", "instant", "obvious", "simple", etc.
+
+## 📱 Usage
+
+1. **Study normally** - Open any deck and start reviewing
+2. **Voice panel appears** automatically on every card
+3. **Click "Start Voice"** to activate voice controls
+4. **Use voice commands** naturally while studying
+5. **Click "Stop Voice"** when finished
+
+## 🎉 Benefits
+
+- **Zero setup per card** - Works with ALL card types automatically
+- **Professional voice synthesis** - High-quality ElevenLabs TTS
+- **Natural language understanding** - Speak naturally, no rigid commands
+- **Session statistics** - Track your study progress
+- **Keyboard shortcuts** - Quick access without mouse
+- **Hands-free operation** - Perfect for accessibility or multitasking
+
+## 🔧 Troubleshooting
+
+### Voice controls don't appear
+- Ensure AnkiConnect is installed (code: 2055492159)
+- Restart Anki after installing AnkiConnect
+- Check that add-on is enabled in Tools → Add-ons
+
+### "API key not configured" error
+- Set ELEVENLABS_API_KEY environment variable
+- Restart Anki after setting the environment variable
+- Verify the API key is valid in your ElevenLabs account
+
+### Speech recognition not working
+- Allow microphone permissions in your browser
+- Try refreshing the card (press 'R' or navigate away and back)
+- Check that your browser supports Web Speech API (Chrome/Edge recommended)
+
+### AnkiConnect connection failed
+- Verify AnkiConnect is installed and enabled
+- Check that Anki is running
+- Ensure no firewall is blocking localhost:8765
+
+## 🚀 Technical Architecture
+
+- **Python Add-on**: Automatic injection system using Anki hooks
+- **AnkiConnect**: Direct Anki integration via REST API
+- **ElevenLabs API**: Professional voice synthesis
+- **Web Speech API**: Browser-based speech recognition
+- **No MCP complexity**: Simple, direct API integration
+
+## 📞 Support
+
+- **Status Check**: Tools → Voice Review → Voice Controls Status
+- **Configuration**: Tools → Voice Review → Configuration  
+- **Help**: Tools → Voice Review → Help
+- **Logs**: Check Anki's debug console for detailed information
+
+Happy hands-free studying! 🎤✨ 

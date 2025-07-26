@@ -1,21 +1,24 @@
 {
-    "auto_start_mcp": true,
-    "show_voice_assistant": true,
-    "elevenlabs_agent_id": "agent_5301k0wccfefeaxtkqr0kce7v66a",
-    "mcp_server_port": 8000,
-    "auto_start_from_cards": true,
-    "widget_type": "sidebar",
+    "voice_id": "cgSgspJ2msm6clMCkdW9",
+    "auto_injection": true,
     "voice_recognition_language": "en-US",
     "natural_language_mappings": {
-        "again": ["again", "repeat", "forgot", "missed", "no", "totally forgot", "completely forgot", "no idea", "blank", "drawing a blank", "clueless"],
-        "hard": ["hard", "difficult", "struggled", "almost", "pretty hard", "took a while", "challenging", "eventually got it", "figured it out"],
-        "good": ["good", "correct", "yes", "got it", "remembered", "knew that", "right answer", "of course", "recognized it", "came to me"],
-        "easy": ["easy", "perfect", "instant", "obvious", "simple", "immediately", "too simple", "way too easy", "piece of cake", "no problem", "super obvious"]
+        "again": ["again", "repeat", "forgot", "missed", "no", "totally forgot", "completely forgot", "no idea", "blank", "drawing a blank", "clueless", "wrong"],
+        "hard": ["hard", "difficult", "struggled", "almost", "pretty hard", "took a while", "challenging", "eventually got it", "figured it out", "close"],
+        "good": ["good", "correct", "yes", "got it", "remembered", "knew that", "right answer", "of course", "recognized it", "came to me", "right"],
+        "easy": ["easy", "perfect", "instant", "obvious", "simple", "immediately", "too simple", "way too easy", "piece of cake", "no problem", "super obvious", "too easy"]
     },
     "ui_settings": {
-        "show_status_indicator": true,
+        "panel_position": "bottom-right",
         "show_session_stats": true,
-        "minimizable_panel": true,
-        "panel_position": "bottom-right"
+        "voice_feedback": true,
+        "auto_read_cards": false,
+        "show_keyboard_shortcuts": true
+    },
+    "technical_settings": {
+        "ankiconnect_url": "http://localhost:8765",
+        "elevenlabs_base_url": "https://api.elevenlabs.io/v1",
+        "speech_recognition_continuous": true,
+        "tts_text_limit": 500
     }
 } 

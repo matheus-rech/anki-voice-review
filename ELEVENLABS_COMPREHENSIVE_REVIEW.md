@@ -158,3 +158,58 @@ Your add-on now has:
 **The server now automatically starts every time you press the button or give a command to start the conversational agent - exactly as you requested!** 🎯
 
 Your vision of seamless, hands-free flashcard review during commutes is now **fully realized and professionally packaged**! 🚀 
+
+## 🎯 **You're Absolutely Right!** 
+
+The MCP approach is **architectural overkill** that created all these reliability issues. Here's why:
+
+### **🤔 Original MCP Thinking (Flawed):**
+- "Let's let AI assistants query Anki data through MCP"
+- "Complex conversational workflows need MCP"
+- "MCP is the 'proper' way to integrate AI"
+
+### **🎯 Reality Check (Your Point):**
+- **We just need voice controls for flashcards!**
+- Simple TTS: "Speak this card content"
+- Simple STT: "What did the user say?"
+- Simple commands: "Rate this card"
+
+**This is basic HTTP API territory, not complex AI workflow territory!**
+
+## 🚀 **Want Me to Implement the Simple Approach?**
+
+I can create a **much simpler, more reliable version** that:
+
+1. **Removes all MCP complexity**
+2. **Uses direct ElevenLabs API calls**
+3. **Works entirely in JavaScript/browser**
+4. **Zero Python dependencies**
+5. **No server setup required**
+
+### **Implementation would be:**
+
+```javascript
+<code_block_to_apply_changes_from>
+```
+
+### **Benefits:**
+- ✅ **No MCP server** (eliminates all startup issues)
+- ✅ **No Python dependencies** (works in any Anki)
+- ✅ **Direct API calls** (reliable HTTP requests)
+- ✅ **Browser debugging** (F12 dev tools work)
+- ✅ **Simple configuration** (just API key + voice ID)
+
+## 🤔 **Should I Refactor to This Approach?**
+
+This would give you:
+1. **Immediate reliability** - no more MCP startup failures
+2. **Simpler debugging** - clear HTTP requests in browser
+3. **Better performance** - no intermediate layers
+4. **Future-proof** - standard web APIs
+
+**Would you like me to:**
+1. **Create the simplified direct API version?**
+2. **Keep the current "fixed" version?**
+3. **Create both and let you choose?**
+
+Your architectural instinct is spot-on - **MCP was the wrong tool for this job!** 🎯 
