@@ -1,0 +1,21 @@
+{
+    "auto_start_mcp": true,
+    "show_voice_assistant": true,
+    "elevenlabs_agent_id": "agent_5301k0wccfefeaxtkqr0kce7v66a",
+    "mcp_server_port": 8000,
+    "auto_start_from_cards": true,
+    "widget_type": "sidebar",
+    "voice_recognition_language": "en-US",
+    "natural_language_mappings": {
+        "again": ["again", "repeat", "forgot", "missed", "no", "totally forgot", "completely forgot", "no idea", "blank", "drawing a blank", "clueless"],
+        "hard": ["hard", "difficult", "struggled", "almost", "pretty hard", "took a while", "challenging", "eventually got it", "figured it out"],
+        "good": ["good", "correct", "yes", "got it", "remembered", "knew that", "right answer", "of course", "recognized it", "came to me"],
+        "easy": ["easy", "perfect", "instant", "obvious", "simple", "immediately", "too simple", "way too easy", "piece of cake", "no problem", "super obvious"]
+    },
+    "ui_settings": {
+        "show_status_indicator": true,
+        "show_session_stats": true,
+        "minimizable_panel": true,
+        "panel_position": "bottom-right"
+    }
+} 

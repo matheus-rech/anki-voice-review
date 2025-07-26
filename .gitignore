@@ -1,0 +1,126 @@
+# Anki Voice Review Add-on - .gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+htmlcov/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Development and temporary files
+*.log
+*.tmp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Anki development files
+anki_mcp_server.log
+*.anki2
+*.anki2-wal
+*.anki2-shm
+collection.anki2*
+
+# Old development files (to be cleaned up)
+voice_addon_integration.py
+anki_card_voice_buttons.py
+ANKI_CARD_INTEGRATION_GUIDE.md
+enhanced_anki_integration.py
+voice_optimization_recommendations.md
+PROJECT_SUMMARY.md
+ELEVENLABS_CODE_COLLABORATION.md
+elevenlabs_integration_demo.py
+INTEGRATION_GUIDE.md
+test_mcp_direct.py
+test_anki_mcp_server.py
+mcp_config.json
+next_steps_roadmap.md
+CLAUDE.md
+static/
+
+# Keep only the properly structured add-on
+# voice_review_addon_proper/ - this is our clean add-on
+
+# Generated packages (keep for distribution)
+# *.ankiaddon - keep for testing and distribution
+
+# Documentation that's been superseded
+README.md.old
+manifest.json.old
+config.json.old
+requirements.txt.old
+__init__.py.old
+
+# Backup files
+*.backup
+*.bak
+
+# IDE and editor files
+*.sublime-project
+*.sublime-workspace
+
+# Node.js (if any JavaScript tooling is added later)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Mac
+.AppleDouble
+.LSOverride
+Icon?
+
+# Windows
+*.stackdump
+Desktop.ini
+
+# Linux
+*~ 

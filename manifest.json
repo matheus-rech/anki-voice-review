@@ -1,0 +1,20 @@
+{
+    "name": "Voice Review with AI Assistant",
+    "package": "voice_review_addon",
+    "author": "Matheus Rech",
+    "version": "1.0.0",
+    "description": "Hands-free flashcard review using voice commands and ElevenLabs conversational AI. Perfect for studying during commutes!",
+    "homepage": "https://github.com/matheus-rech/anki-voice-review",
+    "conflicts": [],
+    "mod": 1738239600,
+    "min_point_version": 50,
+    "max_point_version": 0,
+    "human_version": "1.0.0",
+    "config": {
+        "auto_start_mcp": true,
+        "show_voice_assistant": true,
+        "elevenlabs_agent_id": "agent_5301k0wccfefeaxtkqr0kce7v66a",
+        "mcp_server_port": 8000,
+        "auto_start_from_cards": true
+    }
+} 

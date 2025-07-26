@@ -1,0 +1,9 @@
+{
+    "name": "Voice Review with AI Assistant",
+    "package": "voice_review_addon",
+    "author": "Matheus Rech",
+    "version": "1.0",
+    "homepage": "https://github.com/matheus-rech/anki-voice-review",
+    "conflicts": [],
+    "mod": 0
+}

@@ -1,0 +1,80 @@
+{
+    "port": 5000,
+    "host": "0.0.0.0",
+    "enable_ai_hints": true,
+    "enable_webhook_auth": true,
+    "enable_pwa": true,
+    "session_timeout_minutes": 30,
+    "streak_encouragement_threshold": 5,
+    "auto_start": false,
+    "show_voice_assistant": true,
+    "max_requests_per_minute": 100,
+    "difficulty_threshold": 0.3,
+    "webhook_endpoints": {
+        "conversation_event": "/webhook/conversation_event",
+        "audio_stream": "/webhook/audio_stream"
+    },
+    "review_modes": {
+        "normal": {
+            "name": "Normal",
+            "description": "Standard review with all features",
+            "hints_enabled": true,
+            "time_pressure": false,
+            "affects_scheduling": true
+        },
+        "speed": {
+            "name": "Speed",
+            "description": "Quick reviews with time pressure",
+            "hints_enabled": true,
+            "time_pressure": true,
+            "affects_scheduling": true,
+            "time_limit_seconds": 30
+        },
+        "focus": {
+            "name": "Focus",
+            "description": "Serious study with no hints",
+            "hints_enabled": false,
+            "time_pressure": false,
+            "affects_scheduling": true,
+            "strict_grading": true
+        },
+        "practice": {
+            "name": "Practice",
+            "description": "Review without affecting schedules",
+            "hints_enabled": true,
+            "time_pressure": false,
+            "affects_scheduling": false
+        }
+    },
+    "natural_language_mappings": {
+        "ratings": {
+            "again": ["again", "repeat", "forgot", "missed", "no", "incorrect", "wrong", "didn't know", "don't know", "no idea", "failed", "nope"],
+            "hard": ["hard", "difficult", "struggled", "almost", "partial", "tough", "challenging", "tricky", "not sure", "kind of"],
+            "good": ["good", "correct", "yes", "got it", "remembered", "right", "knew it", "yep", "yeah", "ok", "fine"],
+            "easy": ["easy", "perfect", "instant", "obvious", "simple", "too easy", "trivial", "piece of cake", "no problem", "effortless"]
+        },
+        "commands": {
+            "start_session": ["start session", "let's study", "begin review", "start studying", "let's go", "begin session"],
+            "next_card": ["next card", "continue", "next", "give me another", "next question", "move on"],
+            "show_answer": ["show answer", "reveal answer", "i give up", "what's the answer", "tell me", "show me"],
+            "hint": ["hint", "help", "give me a hint", "help me", "clue", "hint please", "need help"],
+            "pause": ["pause", "take a break", "stop", "hold on", "wait", "pause session"],
+            "resume": ["resume", "continue", "unpause", "keep going", "start again"],
+            "stats": ["statistics", "stats", "how am i doing", "my progress", "show stats", "performance"]
+        }
+    },
+    "ui_customization": {
+        "theme": "auto",
+        "show_streak_animation": true,
+        "sound_effects": false,
+        "voice_feedback_volume": 0.8,
+        "button_layout": "default"
+    },
+    "advanced": {
+        "database_cleanup_days": 30,
+        "max_session_duration_hours": 2,
+        "webhook_timeout_seconds": 30,
+        "enable_debug_logging": false,
+        "cache_statistics_minutes": 5
+    }
+}
