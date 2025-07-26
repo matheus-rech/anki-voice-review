@@ -1,6 +1,8 @@
-// Voice Control JavaScript for Anki Cards
-// This file contains the enhanced voice control system with automatic MCP server startup
+// Enhanced Voice Control for Anki Cards
+// Works with or without MCP server
+console.log('Voice card controls loaded');
 
+// Global voice session state
 let voiceSession = {
     active: false,
     listening: false,
@@ -9,327 +11,434 @@ let voiceSession = {
     currentCard: null,
     sessionStats: {
         cardsReviewed: 0,
-        correctAnswers: 0,
-        startTime: null
-    }
+        startTime: null,
+        correctCount: 0
+    },
+    fallbackMode: false // New: tracks if we're in fallback mode
 };
 
-// Initialize voice controls when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    initializeVoiceControls();
-    checkMCPConnection();
-});
+// Natural language mappings for voice commands
+const voiceCommands = {
+    // Card navigation
+    'next card': () => window.pycmd && window.pycmd('ans'),
+    'show answer': () => window.pycmd && window.pycmd('ans'),
+    'next': () => window.pycmd && window.pycmd('ans'),
+    
+    // Rating commands (fallback to basic Anki commands)
+    'again': () => answerCard(1),
+    'hard': () => answerCard(2), 
+    'good': () => answerCard(3),
+    'easy': () => answerCard(4),
+    
+    // Natural language ratings
+    'i forgot': () => answerCard(1),
+    'forgot': () => answerCard(1),
+    'missed': () => answerCard(1),
+    'no': () => answerCard(1),
+    'wrong': () => answerCard(1),
+    
+    'difficult': () => answerCard(2),
+    'struggled': () => answerCard(2),
+    'almost': () => answerCard(2),
+    'close': () => answerCard(2),
+    
+    'correct': () => answerCard(3),
+    'yes': () => answerCard(3),
+    'got it': () => answerCard(3),
+    'remembered': () => answerCard(3),
+    'right': () => answerCard(3),
+    
+    'perfect': () => answerCard(4),
+    'instant': () => answerCard(4),
+    'obvious': () => answerCard(4),
+    'simple': () => answerCard(4),
+    'too easy': () => answerCard(4)
+};
 
-function initializeVoiceControls() {
-    console.log('🎤 Voice Control System Loaded');
-    updateVoiceStatus('Voice Ready', 'ready');
-    
-    // Add keyboard shortcuts
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'v' && e.ctrlKey) {
-            e.preventDefault();
-            toggleVoiceSession();
+// Answer card function that works with basic Anki
+function answerCard(ease) {
+    try {
+        if (window.pycmd) {
+            window.pycmd(`ease${ease}`);
+            voiceSession.sessionStats.cardsReviewed++;
+            if (ease >= 3) voiceSession.sessionStats.correctCount++;
+            updateSessionStats();
+            return true;
         }
-        if (e.key === 'n' && e.ctrlKey && voiceSession.active) {
-            e.preventDefault();
-            nextCard();
-        }
-        if (e.key === 's' && e.ctrlKey && voiceSession.active) {
-            e.preventDefault();
-            showAnswer();
-        }
-    });
-    
-    // Add minimize/maximize functionality
-    let panel = document.getElementById('voice-controls');
-    if (panel) {
-        panel.addEventListener('dblclick', function() {
-            toggleMinimizePanel();
-        });
+    } catch (error) {
+        console.error('Error answering card:', error);
     }
-    
-    // Show available commands
-    console.log('📋 Available Commands:');
-    console.log('   • Navigation: "next card", "show answer"');
-    console.log('   • Rating: "I forgot" (1), "hard" (2), "got it" (3), "easy" (4)');
-    console.log('   • Session: "start", "stop"');
-    console.log('⌨️  Keyboard Shortcuts:');
-    console.log('   • Ctrl+V: Toggle voice session');
-    console.log('   • Ctrl+N: Next card');
-    console.log('   • Ctrl+S: Show answer');
-    console.log('   • Double-click panel: Minimize/maximize');
+    return false;
 }
 
+// Check if MCP server is available (enhanced with fallback)
 async function checkMCPConnection() {
     try {
         const response = await fetch('http://localhost:8000/health', {
             method: 'GET',
             timeout: 2000
         });
-        
-        if (response.ok) {
-            voiceSession.mcpConnected = true;
-            updateVoiceStatus('MCP Connected', 'connected');
-            return true;
-        } else {
-            throw new Error('MCP server not responding');
-        }
+        return response.ok;
     } catch (error) {
-        console.log('MCP server not available:', error);
-        voiceSession.mcpConnected = false;
+        console.log('MCP server not available, using fallback mode');
         return false;
     }
 }
 
+// Start MCP server with better error handling
 async function startMCPServer() {
-    if (voiceSession.serverStarting) {
-        return false;
+    if (voiceSession.serverStarting || voiceSession.mcpConnected) {
+        return voiceSession.mcpConnected;
     }
-
+    
     voiceSession.serverStarting = true;
     updateVoiceStatus('Starting MCP Server...', 'starting');
     showFeedback('Starting MCP server, please wait...');
     
-    // Disable start button during startup
     const startBtn = document.getElementById('start-voice-btn');
     if (startBtn) startBtn.disabled = true;
 
     try {
-        // Try to call the Anki addon's MCP server start function
+        // Try to start via Anki's Python command interface
         if (typeof window.pycmd !== 'undefined') {
-            // Anki's Python command interface
             window.pycmd('voice_addon:start_mcp_server');
             
-            // Wait for server to start
+            // Wait for server to start with timeout
             let retries = 0;
-            const maxRetries = 30; // 15 seconds max
+            const maxRetries = 10; // Reduced from 30 to fail faster
             
             while (retries < maxRetries) {
                 await new Promise(resolve => setTimeout(resolve, 500));
-                
-                if (await checkMCPConnection()) {
+                const connected = await checkMCPConnection();
+                if (connected) {
                     voiceSession.mcpConnected = true;
-                    voiceSession.serverStarting = false;
+                    voiceSession.fallbackMode = false;
                     updateVoiceStatus('MCP Connected', 'connected');
                     showFeedback('MCP server started successfully!');
-                    
-                    if (startBtn) startBtn.disabled = false;
                     return true;
                 }
                 retries++;
             }
             
-            throw new Error('Server startup timeout');
-            
-        } else {
-            // Fallback: try to start via direct API call
-            const response = await fetch('http://localhost:8000/start', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'start_server' })
-            });
-            
-            if (response.ok) {
-                voiceSession.mcpConnected = true;
-                voiceSession.serverStarting = false;
-                updateVoiceStatus('MCP Connected', 'connected');
-                showFeedback('MCP server started successfully!');
-                
-                if (startBtn) startBtn.disabled = false;
-                return true;
-            } else {
-                throw new Error('Failed to start server via API');
-            }
+            // If we get here, MCP didn't start but that's ok
+            console.log('MCP server timeout, switching to fallback mode');
+            voiceSession.fallbackMode = true;
+            updateVoiceStatus('Basic Mode', 'fallback');
+            showFeedback('Using basic voice controls (MCP server unavailable)');
+            return true; // Return true so voice controls still work
         }
         
     } catch (error) {
         console.error('Error starting MCP server:', error);
-        voiceSession.serverStarting = false;
-        updateVoiceStatus('Server Start Failed', 'disconnected');
-        showFeedback('Failed to start MCP server. Please start manually: Tools → Voice Review → Start MCP Server');
+        voiceSession.fallbackMode = true;
+        updateVoiceStatus('Basic Mode', 'fallback');
+        showFeedback('Using basic voice controls');
+        return true; // Return true for fallback mode
         
+    } finally {
+        voiceSession.serverStarting = false;
         if (startBtn) startBtn.disabled = false;
-        return false;
     }
 }
 
+// Enhanced voice session start
 async function startVoiceSession() {
-    // First check if MCP server is connected
-    if (!voiceSession.mcpConnected) {
-        updateVoiceStatus('Connecting...', 'processing');
-        showFeedback('Checking MCP server connection...');
-        
-        // Try to connect first
-        const connected = await checkMCPConnection();
-        
-        if (!connected) {
-            // If not connected, try to start the server automatically
-            showFeedback('MCP server not running. Starting automatically...');
-            const started = await startMCPServer();
+    if (voiceSession.active) {
+        stopVoiceSession();
+        return;
+    }
+    
+    updateVoiceStatus('Initializing...', 'starting');
+    showFeedback('Initializing voice controls...');
+    
+    // Always try to start/connect MCP, but don't fail if it doesn't work
+    await startMCPServer();
+    
+    // Start voice session regardless of MCP status
+    voiceSession.active = true;
+    voiceSession.sessionStats.startTime = Date.now();
+    voiceSession.sessionStats.cardsReviewed = 0;
+    voiceSession.sessionStats.correctCount = 0;
+    
+    // Show appropriate controls
+    const voiceButtons = document.getElementById('voice-buttons');
+    const startBtn = document.getElementById('start-voice-btn');
+    
+    if (voiceButtons) voiceButtons.style.display = 'flex';
+    if (startBtn) {
+        startBtn.textContent = 'Stop Voice';
+        startBtn.classList.add('active');
+    }
+    
+    // Initialize speech recognition
+    initializeSpeechRecognition();
+    
+    // Update status based on mode
+    if (voiceSession.fallbackMode) {
+        updateVoiceStatus('Voice Active (Basic)', 'active-fallback');
+        showFeedback('Voice controls active! Say "next card", "I forgot", "got it", etc.');
+    } else {
+        updateVoiceStatus('Voice Active (AI)', 'active');
+        showFeedback('Voice controls with AI active! Try natural language commands.');
+    }
+}
+
+// Enhanced speech recognition with better error handling
+function initializeSpeechRecognition() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        showFeedback('Speech recognition not supported in this browser');
+        return;
+    }
+    
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    window.voiceRecognition = new SpeechRecognitionAPI();
+    
+    // Configuration
+    window.voiceRecognition.continuous = true;
+    window.voiceRecognition.interimResults = false;
+    window.voiceRecognition.lang = 'en-US';
+    window.voiceRecognition.maxAlternatives = 3;
+    
+    // Event handlers
+    window.voiceRecognition.onstart = function() {
+        console.log('Speech recognition started');
+        voiceSession.listening = true;
+        updateMicrophoneStatus(true);
+    };
+    
+    window.voiceRecognition.onresult = function(event) {
+        const lastResult = event.results[event.results.length - 1];
+        if (lastResult.isFinal) {
+            const transcript = lastResult[0].transcript.toLowerCase().trim();
+            console.log('Voice command received:', transcript);
             
-            if (!started) {
-                // If auto-start failed, show instructions
-                updateVoiceStatus('Start Required', 'disconnected');
-                showFeedback('Please start MCP server manually: Tools → Voice Review → Start MCP Server');
+            // Show what was heard
+            showFeedback(`Heard: "${transcript}"`);
+            
+            // Process the command
+            handleVoiceCommand(transcript);
+        }
+    };
+    
+    window.voiceRecognition.onerror = function(event) {
+        console.error('Speech recognition error:', event.error);
+        
+        // Handle different error types
+        switch (event.error) {
+            case 'no-speech':
+                showFeedback('No speech detected. Try speaking louder.');
+                break;
+            case 'network':
+                showFeedback('Network error. Check your internet connection.');
+                break;
+            case 'not-allowed':
+                showFeedback('Microphone access denied. Please allow microphone access.');
+                break;
+            default:
+                showFeedback(`Speech error: ${event.error}`);
+        }
+        
+        // Try to restart recognition after a short delay
+        setTimeout(() => {
+            if (voiceSession.active && !voiceSession.listening) {
+                try {
+                    window.voiceRecognition.start();
+                } catch (e) {
+                    console.error('Failed to restart recognition:', e);
+                }
+            }
+        }, 1000);
+    };
+    
+    window.voiceRecognition.onend = function() {
+        console.log('Speech recognition ended');
+        voiceSession.listening = false;
+        updateMicrophoneStatus(false);
+        
+        // Restart if session is still active
+        if (voiceSession.active) {
+            setTimeout(() => {
+                try {
+                    window.voiceRecognition.start();
+                } catch (e) {
+                    console.error('Failed to restart recognition:', e);
+                    showFeedback('Voice recognition stopped. Click microphone to restart.');
+                }
+            }, 500);
+        }
+    };
+    
+    // Start recognition
+    try {
+        window.voiceRecognition.start();
+    } catch (error) {
+        console.error('Failed to start speech recognition:', error);
+        showFeedback('Failed to start voice recognition. Try again.');
+    }
+}
+
+// Enhanced command handling
+function handleVoiceCommand(transcript) {
+    // Check for exact matches first
+    if (voiceCommands[transcript]) {
+        try {
+            voiceCommands[transcript]();
+            showFeedback(`✓ ${transcript}`, 'success');
+            return;
+        } catch (error) {
+            console.error('Error executing command:', error);
+        }
+    }
+    
+    // Check for partial matches
+    for (const [command, action] of Object.entries(voiceCommands)) {
+        if (transcript.includes(command) || command.includes(transcript)) {
+            try {
+                action();
+                showFeedback(`✓ ${command}`, 'success');
                 return;
+            } catch (error) {
+                console.error('Error executing command:', error);
             }
         }
     }
     
-    // At this point, MCP server should be connected
-    voiceSession.active = true;
-    voiceSession.sessionStats.startTime = new Date();
-    
-    updateVoiceStatus('Voice Active', 'recording');
-    showVoiceButtons(true);
-    showFeedback('Voice session started! Say "next card" or click the button to begin.');
-    
-    // Initialize speech recognition if available
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        initializeSpeechRecognition();
-    } else {
-        showFeedback('Speech recognition not supported in this browser. Use Chrome/Edge for best experience.');
-    }
-    
-    console.log('Voice session started');
+    // If no match found
+    showFeedback(`Command not recognized: "${transcript}"`);
+    console.log('Available commands:', Object.keys(voiceCommands));
 }
 
+// Enhanced feedback system
+function showFeedback(message, type = 'info') {
+    const feedback = document.getElementById('voice-feedback');
+    if (!feedback) return;
+    
+    feedback.textContent = message;
+    feedback.className = `voice-feedback ${type}`;
+    
+    // Auto-hide success messages, keep errors visible
+    if (type === 'success' || type === 'info') {
+        setTimeout(() => {
+            if (feedback.textContent === message) {
+                feedback.textContent = '';
+                feedback.className = 'voice-feedback';
+            }
+        }, 3000);
+    }
+}
+
+// Enhanced status updates
+function updateVoiceStatus(status, className) {
+    const statusElement = document.getElementById('voice-status');
+    if (statusElement) {
+        statusElement.textContent = status;
+        statusElement.className = `voice-status ${className}`;
+    }
+}
+
+function updateMicrophoneStatus(listening) {
+    const micBtn = document.getElementById('mic-btn');
+    if (micBtn) {
+        micBtn.classList.toggle('listening', listening);
+        micBtn.title = listening ? 'Listening...' : 'Click to toggle microphone';
+    }
+}
+
+function updateSessionStats() {
+    const statsElement = document.getElementById('session-stats');
+    if (statsElement && voiceSession.sessionStats.startTime) {
+        const duration = Math.floor((Date.now() - voiceSession.sessionStats.startTime) / 1000);
+        const accuracy = voiceSession.sessionStats.cardsReviewed > 0 
+            ? Math.round((voiceSession.sessionStats.correctCount / voiceSession.sessionStats.cardsReviewed) * 100)
+            : 0;
+        
+        statsElement.textContent = `${voiceSession.sessionStats.cardsReviewed} cards, ${duration}s, ${accuracy}% accuracy`;
+    }
+}
+
+// Enhanced session stop
 function stopVoiceSession() {
     voiceSession.active = false;
     voiceSession.listening = false;
     
-    updateVoiceStatus('Voice Ready', 'ready');
-    showVoiceButtons(false);
-    showFeedback('Voice session ended.');
-    
     // Stop speech recognition
     if (window.voiceRecognition) {
-        window.voiceRecognition.stop();
+        try {
+            window.voiceRecognition.stop();
+        } catch (e) {
+            console.error('Error stopping recognition:', e);
+        }
     }
+    
+    // Update UI
+    const voiceButtons = document.getElementById('voice-buttons');
+    const startBtn = document.getElementById('start-voice-btn');
+    
+    if (voiceButtons) voiceButtons.style.display = 'none';
+    if (startBtn) {
+        startBtn.textContent = 'Start Voice';
+        startBtn.classList.remove('active');
+    }
+    
+    updateVoiceStatus('Voice Inactive', 'inactive');
+    updateMicrophoneStatus(false);
     
     // Show session summary
     if (voiceSession.sessionStats.cardsReviewed > 0) {
-        const duration = Math.round((new Date() - voiceSession.sessionStats.startTime) / 1000);
-        const accuracy = Math.round((voiceSession.sessionStats.correctAnswers / voiceSession.sessionStats.cardsReviewed) * 100);
-        showFeedback(`Session complete! ${voiceSession.sessionStats.cardsReviewed} cards in ${duration}s (${accuracy}% accuracy)`);
-    }
-    
-    console.log('Voice session stopped');
-}
-
-function toggleVoiceSession() {
-    if (voiceSession.active) {
-        stopVoiceSession();
+        const duration = Math.floor((Date.now() - voiceSession.sessionStats.startTime) / 1000);
+        const accuracy = Math.round((voiceSession.sessionStats.correctCount / voiceSession.sessionStats.cardsReviewed) * 100);
+        showFeedback(`Session complete! ${voiceSession.sessionStats.cardsReviewed} cards in ${duration}s (${accuracy}% accuracy)`, 'success');
     } else {
-        startVoiceSession();
+        showFeedback('Voice session ended');
     }
 }
 
-function processVoiceCommand(command) {
-    console.log('Voice command:', command);
-    showFeedback(`Heard: "${command}"`);
-    
-    // Enhanced natural language processing
-    const easeMap = {
-        'again': 'again', 'hard': 'hard', 'good': 'good', 'easy': 'easy',
-        'repeat': 'again', 'forgot': 'again', 'missed': 'again', 'no': 'again',
-        'totally forgot': 'again', 'completely forgot': 'again', 'no idea': 'again',
-        'blank': 'again', 'drawing a blank': 'again', 'clueless': 'again',
-        'difficult': 'hard', 'struggled': 'hard', 'almost': 'hard',
-        'pretty hard': 'hard', 'took a while': 'hard', 'challenging': 'hard',
-        'eventually got it': 'hard', 'figured it out': 'hard',
-        'correct': 'good', 'yes': 'good', 'got it': 'good', 'remembered': 'good',
-        'knew that': 'good', 'right answer': 'good', 'of course': 'good',
-        'recognized it': 'good', 'came to me': 'good',
-        'perfect': 'easy', 'instant': 'easy', 'obvious': 'easy', 'simple': 'easy',
-        'immediately': 'easy', 'too simple': 'easy', 'way too easy': 'easy',
-        'piece of cake': 'easy', 'no problem': 'easy', 'super obvious': 'easy'
-    };
-    
-    // Check for rating commands first (most specific)
-    for (const [phrase, rating] of Object.entries(easeMap)) {
-        if (command.includes(phrase)) {
-            rateCard(rating);
-            return;
+// Keyboard shortcuts
+document.addEventListener('keydown', function(event) {
+    if (event.ctrlKey || event.metaKey) {
+        switch (event.key.toLowerCase()) {
+            case 'v':
+                event.preventDefault();
+                startVoiceSession();
+                break;
+            case 'm':
+                event.preventDefault();
+                if (window.voiceRecognition && voiceSession.active) {
+                    if (voiceSession.listening) {
+                        window.voiceRecognition.stop();
+                    } else {
+                        window.voiceRecognition.start();
+                    }
+                }
+                break;
         }
     }
+});
+
+// Auto-initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Voice controls initialized - Basic mode available, MCP optional');
     
-    // Check for navigation commands
-    if (command.includes('next card') || command.includes('continue') || command.includes('next')) {
-        nextCard();
-    } else if (command.includes('show answer') || command.includes('reveal') || command.includes('answer')) {
-        showAnswer();
-    } else if (command.includes('stop') || command.includes('end session')) {
-        stopVoiceSession();
-    } else if (command.includes('start') || command.includes('begin')) {
-        if (!voiceSession.active) startVoiceSession();
-    } else {
-        showFeedback(`Unrecognized command: "${command}". Try: next card, show answer, I forgot, too easy`);
-    }
-}
-
-// Helper functions that need to be implemented based on the specific Anki interface
-function nextCard() {
-    console.log('Next card requested');
-    // Implementation depends on Anki interface
-}
-
-function showAnswer() {
-    console.log('Show answer requested');
-    // Implementation depends on Anki interface
-}
-
-function rateCard(difficulty) {
-    console.log(`Card rated: ${difficulty}`);
-    // Implementation depends on Anki interface
-}
-
-function updateVoiceStatus(text, status) {
-    const statusText = document.getElementById('status-text');
-    const statusIndicator = document.getElementById('status-indicator');
-    if (statusText) statusText.textContent = text;
-    if (statusIndicator) statusIndicator.className = `status-indicator ${status}`;
-}
-
-function showVoiceButtons(show) {
+    // Check if voice panel exists and add event listeners
     const startBtn = document.getElementById('start-voice-btn');
-    const stopBtn = document.getElementById('stop-voice-btn');
-    const nextBtn = document.getElementById('next-card-btn');
-    const answerBtn = document.getElementById('show-answer-btn');
-    
-    if (startBtn) startBtn.style.display = show ? 'none' : 'flex';
-    if (stopBtn) stopBtn.style.display = show ? 'flex' : 'none';
-    if (nextBtn) nextBtn.style.display = show ? 'flex' : 'none';
-    if (answerBtn) answerBtn.style.display = show ? 'flex' : 'none';
-}
-
-function showFeedback(message) {
-    const feedback = document.getElementById('voice-feedback');
-    const feedbackText = document.getElementById('feedback-text');
-    
-    if (feedback && feedbackText) {
-        feedbackText.textContent = message;
-        feedback.style.display = 'block';
-        
-        // Auto-hide after 3 seconds unless it's an error or important message
-        if (!message.includes('Error') && !message.includes('Failed') && !message.includes('Please')) {
-            setTimeout(() => {
-                feedback.style.display = 'none';
-            }, 3000);
-        }
+    if (startBtn) {
+        startBtn.addEventListener('click', startVoiceSession);
     }
     
-    console.log('Voice Feedback:', message);
-}
-
-function initializeSpeechRecognition() {
-    // Speech recognition implementation
-    console.log('Speech recognition initialized');
-}
-
-function toggleMinimizePanel() {
-    const panel = document.getElementById('voice-controls');
-    if (panel) {
-        panel.classList.toggle('minimized');
+    const micBtn = document.getElementById('mic-btn');
+    if (micBtn) {
+        micBtn.addEventListener('click', function() {
+            if (voiceSession.active && window.voiceRecognition) {
+                if (voiceSession.listening) {
+                    window.voiceRecognition.stop();
+                } else {
+                    window.voiceRecognition.start();
+                }
+            }
+        });
     }
-} 
+    
+    // Show initial status
+    updateVoiceStatus('Voice Ready', 'ready');
+    showFeedback('Voice controls ready! Click "Start Voice" to begin.');
+}); 

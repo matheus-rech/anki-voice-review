@@ -134,14 +134,33 @@ class VoiceReviewAddon:
                 return True
                 
             logger.info("Starting MCP server...")
-            self.mcp_server = AnkiMCPServer()
             
-            logger.info("MCP server started successfully")
-            return True
-            
+            # Check if MCP dependencies are available
+            try:
+                from .core.mcp_server import AnkiMCPServer, MCP_AVAILABLE
+                if not MCP_AVAILABLE:
+                    logger.warning("MCP library not available - running in fallback mode")
+                    showInfo("MCP Server dependencies not available.\n\nVoice controls will work in basic mode.\n\nFor full AI features, install MCP library:\npip install mcp")
+                    # Create a mock server for basic functionality
+                    self.mcp_server = "mock_server"
+                    return True
+                    
+                self.mcp_server = AnkiMCPServer()
+                logger.info("MCP server started successfully")
+                return True
+                
+            except ImportError as ie:
+                logger.warning(f"MCP server import failed: {ie}")
+                showInfo("Voice controls will work in basic mode.\n\nFor AI assistant features, check the installation guide.")
+                self.mcp_server = "mock_server"
+                return True
+                
         except Exception as e:
             logger.error(f"Failed to start MCP server: {e}")
-            return False
+            showInfo(f"MCP Server startup failed: {str(e)}\n\nVoice controls will still work in basic mode.")
+            # Set mock server so voice controls can still work
+            self.mcp_server = "mock_server"
+            return True  # Return True so voice controls can still function
     
     def stop_mcp_server(self):
         """Stop the MCP server"""
@@ -168,15 +187,21 @@ class VoiceReviewAddon:
     
     def show_config(self):
         """Show configuration dialog"""
-        from .ui.config_dialog import ConfigDialog
-        dialog = ConfigDialog(self.config_manager, mw)
-        dialog.exec()
+        try:
+            from .ui.config_dialog import show_config_dialog
+            show_config_dialog()
+        except Exception as e:
+            logger.error(f"Error showing config: {e}")
+            showInfo(f"Configuration error: {str(e)}\n\nTry: Tools → Add-ons → Voice Review → Config")
     
     def show_help(self):
         """Show help dialog"""
-        from .ui.help_dialog import HelpDialog
-        dialog = HelpDialog(mw)
-        dialog.exec()
+        try:
+            from .ui.config_dialog import show_help_dialog
+            show_help_dialog()
+        except Exception as e:
+            logger.error(f"Error showing help: {e}")
+            showInfo("Voice Review Help:\n\n1. Add voice controls to cards\n2. Use natural voice commands\n3. Configure ElevenLabs agent ID\n\nSee README.md for details.")
 
 # Global addon instance
 addon_instance: Optional[VoiceReviewAddon] = None
