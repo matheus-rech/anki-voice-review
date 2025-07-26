@@ -1,8 +1,8 @@
 """
-Complete Voice Review Add-on for Anki - Full Implementation
+Complete Voice Review Add-on for Anki - Personal Edition
 Automatically injects voice controls into all cards using AnkiConnect + ElevenLabs APIs
+Pre-configured with your personal ElevenLabs API key for immediate use
 No manual template editing required - works independently
-Uses secure API key management with multiple fallback sources
 """
 
 import logging
@@ -22,7 +22,7 @@ try:
 
     # Import our modules
     from .utils.config_manager import ConfigManager
-    from .utils.secure_config import get_secure_config
+    from .utils.personal_config import get_personal_config
     
     ANKI_AVAILABLE = True
     logger.info("Voice Review Add-on: Anki environment detected")
@@ -30,39 +30,39 @@ except ImportError as e:
     ANKI_AVAILABLE = False
     logger.warning(f"Anki not available: {e}")
 
-class CompleteVoiceReviewAddon:
+class PersonalVoiceReviewAddon:
     """
-    Complete Voice Review Add-on - Full Implementation
+    Personal Voice Review Add-on - Pre-configured for You
     Automatically injects voice controls into all Anki cards
-    Uses AnkiConnect + ElevenLabs APIs for maximum simplicity and reliability
-    Secure API key management with multiple fallback sources
+    Uses AnkiConnect + ElevenLabs APIs with your personal API key
+    Ready to use out of the box!
     """
     
     def __init__(self):
         self.config_manager = None
         self.voice_controls_active = False
-        self.secure_config = None
+        self.personal_config = None
         
         if ANKI_AVAILABLE:
             self.initialize()
     
     def initialize(self):
-        """Initialize the complete add-on"""
+        """Initialize your personal add-on"""
         try:
-            logger.info("Initializing Complete Voice Review Add-on...")
+            logger.info("Initializing Personal Voice Review Add-on...")
             
             # Initialize configuration
             self.config_manager = ConfigManager()
             
-            # Initialize secure configuration for API key
-            self.secure_config = get_secure_config()
+            # Initialize personal configuration with your API key
+            self.personal_config = get_personal_config()
             
-            # Log API key status securely
-            status = self.secure_config.get_status_info()
+            # Log API key status
+            status = self.personal_config.get_status_info()
             if status['configured']:
                 logger.info(f"ElevenLabs API key: {status['message']} ({status['key_suffix']})")
             else:
-                logger.warning("ElevenLabs API key: Not configured")
+                logger.warning("ElevenLabs API key: Not available")
             
             # Set up Anki hooks for automatic injection
             self._setup_hooks()
@@ -70,7 +70,7 @@ class CompleteVoiceReviewAddon:
             # Set up menu
             self._setup_menu()
             
-            logger.info("Complete Voice Review Add-on initialized successfully")
+            logger.info("Personal Voice Review Add-on initialized successfully")
             
         except Exception as e:
             logger.error(f"Failed to initialize add-on: {e}")
@@ -122,11 +122,11 @@ class CompleteVoiceReviewAddon:
             logger.error(f"Failed to inject voice controls: {e}")
     
     def _get_complete_voice_system(self):
-        """Get the complete voice control system (HTML, CSS, JavaScript)"""
+        """Get the complete voice control system with your personal settings"""
         
         # HTML for voice control panel
         voice_html = '''
-        <!-- Voice Controls - Auto-Injected by Add-on -->
+        <!-- Personal Voice Controls - Auto-Injected -->
         <div id="voice-controls" class="voice-control-panel">
             <div class="voice-status-section">
                 <div id="voice-status" class="voice-status ready">Voice Ready</div>
@@ -162,7 +162,7 @@ class CompleteVoiceReviewAddon:
         
         # CSS for voice control styling (unchanged)
         voice_css = '''
-        /* Voice Control Panel - Auto-Injected */
+        /* Personal Voice Control Panel - Auto-Injected */
         .voice-control-panel {
             position: fixed;
             bottom: 20px;
@@ -286,20 +286,23 @@ class CompleteVoiceReviewAddon:
         }
         '''
         
-        # JavaScript with secure API key loading
-        api_key = self.secure_config.get_api_key() or 'NOT_CONFIGURED'
+        # JavaScript with your personal API key pre-configured
+        api_key = self.personal_config.get_api_key() or 'NOT_CONFIGURED'
+        voice_id = self.personal_config.get_voice_id()
+        voice_settings = self.personal_config.get_voice_settings()
         
         voice_js = f'''
-        // Complete Voice Control System - Auto-Injected with Secure Config
+        // Personal Voice Control System - Pre-configured for You
         (function() {{
             // Prevent multiple initialization
             if (window.voiceControlsInitialized) return;
             window.voiceControlsInitialized = true;
             
-            console.log('Voice Controls: Auto-injected with secure API key management');
+            console.log('🎯 Personal Voice Controls: Pre-configured and ready!');
             
             const ELEVENLABS_API_KEY = '{api_key}';
-            const VOICE_ID = 'cgSgspJ2msm6clMCkdW9';
+            const VOICE_ID = '{voice_id}';
+            const VOICE_SETTINGS = {json.dumps(voice_settings)};
             const ANKICONNECT_URL = 'http://localhost:8765';
             
             let voiceSession = {{
@@ -358,12 +361,13 @@ class CompleteVoiceReviewAddon:
                 }}
             }}
             
-            // ElevenLabs API
-            class ElevenLabsAPI {{
+            // ElevenLabs API with your personal settings
+            class PersonalElevenLabsAPI {{
                 constructor(apiKey, voiceId = VOICE_ID) {{
                     this.apiKey = apiKey;
                     this.voiceId = voiceId;
                     this.baseUrl = 'https://api.elevenlabs.io/v1';
+                    this.voiceSettings = VOICE_SETTINGS;
                 }}
                 
                 async testConnection() {{
@@ -389,7 +393,7 @@ class CompleteVoiceReviewAddon:
                             body: JSON.stringify({{
                                 text: text.substring(0, 500),
                                 model_id: 'eleven_monolingual_v1',
-                                voice_settings: {{ stability: 0.5, similarity_boost: 0.5 }}
+                                voice_settings: this.voiceSettings
                             }})
                         }});
                         
@@ -475,7 +479,7 @@ class CompleteVoiceReviewAddon:
                     text = text.replace(/Show Answer|Type in the answer/gi, '');
                     
                     if (text && elevenLabs) {{
-                        showFeedback('Reading card...', 'info');
+                        showFeedback('Reading card with your voice...', 'info');
                         await elevenLabs.speak(text);
                     }} else {{
                         showFeedback('No content to read', 'warning');
@@ -492,15 +496,15 @@ class CompleteVoiceReviewAddon:
                 }}
                 
                 updateVoiceStatus('Connecting...', 'starting');
-                showFeedback('Starting voice session...');
+                showFeedback('Starting your personal voice session...');
                 
                 try {{
                     if (ELEVENLABS_API_KEY === 'NOT_CONFIGURED') {{
-                        throw new Error('ElevenLabs API key not configured. Check Tools → Voice Review → Configuration');
+                        throw new Error('Personal API key not available. Please check add-on installation.');
                     }}
                     
                     ankiConnect = new AnkiConnectAPI();
-                    elevenLabs = new ElevenLabsAPI(ELEVENLABS_API_KEY);
+                    elevenLabs = new PersonalElevenLabsAPI(ELEVENLABS_API_KEY);
                     
                     showFeedback('Testing AnkiConnect...', 'info');
                     const ankiOk = await ankiConnect.testConnection();
@@ -508,10 +512,10 @@ class CompleteVoiceReviewAddon:
                         throw new Error('AnkiConnect not available. Install add-on code: 2055492159');
                     }}
                     
-                    showFeedback('Testing ElevenLabs...', 'info');
+                    showFeedback('Testing your ElevenLabs connection...', 'info');
                     const elevenLabsOk = await elevenLabs.testConnection();
                     if (!elevenLabsOk) {{
-                        throw new Error('ElevenLabs API failed. Check Tools → Voice Review → Configuration');
+                        throw new Error('ElevenLabs API connection failed. Check your internet connection.');
                     }}
                     
                     voiceSession.active = true;
@@ -531,15 +535,15 @@ class CompleteVoiceReviewAddon:
                     
                     initializeSpeechRecognition();
                     
-                    updateVoiceStatus('Voice Active', 'active');
-                    showFeedback('🎤 Voice active! Say "show answer", "got it", or "read card"', 'success');
+                    updateVoiceStatus('Personal Voice Active', 'active');
+                    showFeedback('🎤 Your personal voice controls are active!', 'success');
                     
                     setTimeout(() => {{
-                        elevenLabs.speak("Voice controls activated. Say show answer, got it, read card, or help.");
+                        elevenLabs.speak("Personal voice controls activated. Ready for hands-free studying!");
                     }}, 1000);
                     
                 }} catch (error) {{
-                    updateVoiceStatus('Failed', 'error');
+                    updateVoiceStatus('Connection Failed', 'error');
                     showFeedback(`Failed: ${{error.message}}`, 'error');
                 }}
             }}
@@ -571,13 +575,13 @@ class CompleteVoiceReviewAddon:
                 if (voiceSession.stats.cardsReviewed > 0) {{
                     const duration = Math.floor((Date.now() - voiceSession.stats.startTime) / 1000);
                     const accuracy = Math.round((voiceSession.stats.correctCount / voiceSession.stats.cardsReviewed) * 100);
-                    showFeedback(`Session: ${{voiceSession.stats.cardsReviewed}} cards, ${{duration}}s, ${{accuracy}}% accuracy`, 'success');
+                    showFeedback(`Session complete: ${{voiceSession.stats.cardsReviewed}} cards, ${{duration}}s, ${{accuracy}}% accuracy`, 'success');
                 }}
             }}
             
             function initializeSpeechRecognition() {{
                 if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {{
-                    showFeedback('Speech recognition not supported', 'warning');
+                    showFeedback('Speech recognition not supported in this browser', 'warning');
                     return;
                 }}
                 
@@ -640,16 +644,16 @@ class CompleteVoiceReviewAddon:
             }}
             
             function showVoiceHelp() {{
-                const helpText = `Voice Commands:
-Navigation: "show answer", "next card"
+                const helpText = `Personal Voice Commands:
+Navigation: "show answer", "next card"  
 Rating: "I forgot", "hard", "got it", "easy"
 Audio: "read card", "repeat"
-Session: "help"
+Help: "help"
 
-Natural language works too!`;
+Speak naturally - your personal voice system understands!`;
                 showFeedback(helpText, 'info');
                 if (elevenLabs) {{
-                    elevenLabs.speak("Available commands: show answer, I forgot, got it, easy, read card, help.");
+                    elevenLabs.speak("Your personal voice commands: show answer, I forgot, got it, easy, read card, help.");
                 }}
             }}
             
@@ -697,7 +701,7 @@ Natural language works too!`;
             }}
             
             // Initialize event listeners
-            function initializeVoiceControls() {{
+            function initializePersonalVoiceControls() {{
                 const startBtn = document.getElementById('start-voice-btn');
                 if (startBtn) {{
                     startBtn.addEventListener('click', startVoiceSession);
@@ -743,20 +747,20 @@ Natural language works too!`;
                 }});
                 
                 updateVoiceStatus('Voice Ready', 'ready');
-                showFeedback('Voice controls ready! Click "Start Voice" to begin.');
+                showFeedback('🎯 Personal voice controls ready! Pre-configured for you.');
                 
-                console.log('🎤 Voice Controls Fully Initialized with Secure Config');
+                console.log('🎤 Personal Voice Controls Initialized');
+                console.log('  • Pre-configured with your API key');
+                console.log('  • Optimized voice settings');
                 console.log('  • AnkiConnect + ElevenLabs integration');
-                console.log('  • Automatic injection into all cards');
-                console.log('  • Secure API key management');
                 console.log('  • Keyboard shortcuts: Ctrl+V (start/stop), Ctrl+R (read)');
             }}
             
             // Initialize when DOM is ready
             if (document.readyState === 'loading') {{
-                document.addEventListener('DOMContentLoaded', initializeVoiceControls);
+                document.addEventListener('DOMContentLoaded', initializePersonalVoiceControls);
             }} else {{
-                initializeVoiceControls();
+                initializePersonalVoiceControls();
             }}
         }})();
         '''
@@ -780,31 +784,31 @@ Natural language works too!`;
     
     def _on_profile_opened(self):
         """Called when a profile is opened"""
-        logger.info("Profile opened - voice controls will be automatically injected into cards")
+        logger.info("Profile opened - personal voice controls will be automatically injected")
     
     def _setup_menu(self):
-        """Set up the Voice Review menu"""
+        """Set up the Personal Voice Review menu"""
         try:
-            # Create Voice Review submenu
-            voice_menu = QMenu("Voice Review", mw)
+            # Create Personal Voice Review submenu
+            voice_menu = QMenu("Personal Voice Review", mw)
             
             # Status action
             status_action = QAction("Voice Controls Status", mw)
-            status_action.setStatusTip("Show voice controls status")
+            status_action.setStatusTip("Show your personal voice controls status")
             status_action.triggered.connect(self._show_status)
             voice_menu.addAction(status_action)
             
             voice_menu.addSeparator()
             
             # Configuration action  
-            config_action = QAction("Configuration", mw)
-            config_action.setStatusTip("Configure voice controls")
+            config_action = QAction("Personal Configuration", mw)
+            config_action.setStatusTip("View your personal configuration")
             config_action.triggered.connect(self._show_config)
             voice_menu.addAction(config_action)
             
             # Help action
             help_action = QAction("Help", mw)
-            help_action.setStatusTip("Show voice controls help")
+            help_action.setStatusTip("Show personal voice controls help")
             help_action.triggered.connect(self._show_help)
             voice_menu.addAction(help_action)
             
@@ -812,31 +816,28 @@ Natural language works too!`;
             mw.form.menuTools.addSeparator()
             mw.form.menuTools.addMenu(voice_menu)
             
-            logger.info("Voice Review menu added to Tools menu")
+            logger.info("Personal Voice Review menu added to Tools menu")
             
         except Exception as e:
             logger.error(f"Failed to setup menu: {e}")
     
     def _show_status(self):
-        """Show voice controls status"""
+        """Show your personal voice controls status"""
         try:
             status = self.get_status()
-            secure_status = self.secure_config.get_status_info()
+            personal_status = self.personal_config.get_status_info()
             
-            status_text = "🎤 Voice Controls Status:\n\n"
+            status_text = "🎯 Personal Voice Controls Status:\n\n"
             
-            if secure_status['configured']:
-                status_text += f"✅ ElevenLabs API Key: {secure_status['message']} ({secure_status['key_suffix']})\n"
+            if personal_status['configured']:
+                status_text += f"✅ ElevenLabs API Key: {personal_status['message']} ({personal_status['key_suffix']})\n"
             else:
-                status_text += "❌ ElevenLabs API Key: Not configured\n"
+                status_text += "❌ ElevenLabs API Key: Not available\n"
             
             status_text += "✅ Voice Controls: Auto-injected into all cards\n"
             status_text += "✅ AnkiConnect: Required (install code: 2055492159)\n"
-            status_text += f"✅ Voice ID: {status['voice_id']}\n\n"
-            
-            if not secure_status['configured']:
-                status_text += "🔧 Setup Required:\n"
-                status_text += secure_status['instructions'] + "\n\n"
+            status_text += f"✅ Voice ID: {self.personal_config.get_voice_id()}\n"
+            status_text += "✅ Voice Settings: Optimized for quality\n\n"
             
             status_text += "📱 How to Use:\n"
             status_text += "1. Study any card normally\n"
@@ -848,103 +849,69 @@ Natural language works too!`;
             status_text += "• Ctrl+V: Start/stop voice session\n"
             status_text += "• Ctrl+R: Read current card\n\n"
             
-            status_text += "🔧 No manual setup required!\n"
-            status_text += "Voice controls automatically appear on all cards."
+            status_text += "🎯 PRE-CONFIGURED FOR YOU:\n"
+            status_text += "This add-on is personally configured with your API key\n"
+            status_text += "and optimized settings for immediate use!"
             
-            showInfo(status_text, title="Voice Controls Status")
+            showInfo(status_text, title="Personal Voice Controls Status")
             
         except Exception as e:
             logger.error(f"Error showing status: {e}")
             showInfo(f"Error showing status: {e}")
     
     def _show_config(self):
-        """Show configuration information with secure setup"""
+        """Show your personal configuration"""
         try:
-            secure_status = self.secure_config.get_status_info()
+            personal_status = self.personal_config.get_status_info()
             
-            config_text = "🔧 Voice Controls Configuration:\n\n"
+            config_text = "🎯 Personal Voice Controls Configuration:\n\n"
             
-            if secure_status['configured']:
-                config_text += f"✅ ElevenLabs API Key: {secure_status['message']} ({secure_status['key_suffix']})\n"
+            if personal_status['configured']:
+                config_text += f"✅ ElevenLabs API Key: {personal_status['message']} ({personal_status['key_suffix']})\n"
             else:
-                config_text += "❌ ElevenLabs API Key: Not configured\n\n"
-                config_text += "🔐 SECURE SETUP OPTIONS:\n\n"
-                config_text += "OPTION 1 (Recommended): Environment Variable\n"
-                config_text += "export ELEVENLABS_API_KEY='sk_a00deab5b87abdf75edd4518463f3945005b6479d7493ee1'\n\n"
-                config_text += "OPTION 2: User Config File\n"
-                config_text += "Click 'Set API Key' button below to save securely\n\n"
+                config_text += "❌ ElevenLabs API Key: Not available\n"
+            
+            config_text += f"✅ Voice ID: {self.personal_config.get_voice_id()}\n"
+            config_text += f"✅ Voice Settings: Optimized (stability: {self.personal_config.get_voice_settings()['stability']})\n\n"
             
             config_text += "📋 System Requirements:\n"
             config_text += "1. AnkiConnect add-on (Code: 2055492159)\n"
-            config_text += "2. ElevenLabs API key (configured securely)\n"
-            config_text += "3. That's it! Voice controls auto-inject.\n\n"
+            config_text += "2. That's it! Your API key is pre-configured.\n\n"
             
-            config_text += "🎯 Features:\n"
+            config_text += "🎯 Personal Features:\n"
+            config_text += "• Pre-configured with your ElevenLabs API key\n"
+            config_text += "• Optimized voice settings for quality\n"
             config_text += "• Automatic injection into all cards\n"
-            config_text += "• AnkiConnect + ElevenLabs APIs\n"
             config_text += "• Natural language voice commands\n"
-            config_text += "• Text-to-speech for card content\n"
             config_text += "• Session statistics tracking\n"
-            config_text += "• Secure API key management\n\n"
+            config_text += "• Ready to use out of the box\n\n"
             
-            config_text += "🚀 No manual template editing required!"
+            config_text += self.personal_config.get_setup_message()
             
-            showInfo(config_text, title="Voice Controls Configuration")
-            
-            # Offer to set API key if not configured
-            if not secure_status['configured']:
-                self._offer_api_key_setup()
+            showInfo(config_text, title="Personal Voice Controls Configuration")
             
         except Exception as e:
             logger.error(f"Error showing config: {e}")
             showInfo(f"Error showing configuration: {e}")
     
-    def _offer_api_key_setup(self):
-        """Offer to set up API key via dialog"""
-        try:
-            from aqt.utils import getText
-            
-            api_key, ok = getText(
-                "Set ElevenLabs API Key", 
-                "Enter your ElevenLabs API key:\n(Will be saved securely in your user config)\n\nYour key: sk_a00deab5b87abdf75edd4518463f3945005b6479d7493ee1",
-                default="sk_a00deab5b87abdf75edd4518463f3945005b6479d7493ee1"
-            )
-            
-            if ok and api_key and api_key.strip():
-                if self.secure_config.save_to_user_config(api_key.strip()):
-                    showInfo("✅ API key saved securely!\n\nVoice controls are now ready to use.\nRestart Anki to ensure full functionality.")
-                else:
-                    showWarning("❌ Failed to save API key.\n\nPlease set the environment variable instead:\nexport ELEVENLABS_API_KEY='your_key_here'")
-            
-        except Exception as e:
-            logger.error(f"Error in API key setup: {e}")
-            showWarning(f"Error setting up API key: {e}")
-    
     def _show_help(self):
-        """Show comprehensive help"""
+        """Show personal voice controls help"""
         try:
-            help_text = """🎤 Complete Voice Controls Help
+            help_text = """🎯 Personal Voice Controls Help
 
-🚀 AUTOMATIC SETUP:
-Voice controls are automatically added to ALL your cards!
-No manual template editing required.
+🚀 PRE-CONFIGURED FOR YOU:
+Your add-on is ready to use with your personal ElevenLabs API key
+and optimized voice settings. No setup required!
 
 📋 REQUIREMENTS:
 1. AnkiConnect add-on (Code: 2055492159)
-2. ElevenLabs API key (configured securely)
-
-🔐 SECURE API KEY SETUP:
-Environment Variable (Recommended):
-export ELEVENLABS_API_KEY='sk_a00deab5b87abdf75edd4518463f3945005b6479d7493ee1'
-
-User Config (Alternative):
-Tools → Voice Review → Configuration → Set API Key
+2. That's it! Everything else is pre-configured.
 
 🎯 HOW TO USE:
 1. Study any card normally
 2. Voice control panel appears automatically
 3. Click "Start Voice" button
-4. Use voice commands:
+4. Use voice commands naturally
 
 🎤 VOICE COMMANDS:
 Navigation:
@@ -958,7 +925,7 @@ Rating (Natural Language):
 • "easy" / "perfect" - Rate as Easy (4)
 
 Audio:
-• "read card" - Text-to-speech of card content
+• "read card" - Text-to-speech with your voice
 • "repeat" - Read card again
 • "help" - Show available commands
 
@@ -966,54 +933,55 @@ Audio:
 • Ctrl+V - Start/stop voice session
 • Ctrl+R - Read current card
 
-🔧 TECHNICAL DETAILS:
-• Uses AnkiConnect for Anki integration
-• Uses ElevenLabs API for voice synthesis
-• Browser Speech Recognition for commands
+🔧 PERSONAL FEATURES:
+• Pre-configured with your API key
+• Optimized voice settings for quality
 • Automatic injection via Anki hooks
-• Secure API key management (no hardcoding)
+• Session statistics tracking
+• Professional voice synthesis
 
 🎉 BENEFITS:
-• Zero manual setup per card
-• Works with ALL card types
-• Professional voice synthesis
+• Zero setup required - ready to use
+• Works with ALL card types automatically
+• High-quality voice synthesis with your settings
 • Natural language understanding
-• Session statistics tracking
-• Secure configuration management
+• Hands-free studying experience
 
-Happy voice studying! 🚀"""
+🎯 This is YOUR personal voice control system!
+Ready for immediate hands-free studying! 🚀"""
             
-            showInfo(help_text, title="Voice Controls - Complete Help")
+            showInfo(help_text, title="Personal Voice Controls - Help")
             
         except Exception as e:
             logger.error(f"Error showing help: {e}")
             showInfo(f"Error showing help: {e}")
     
     def get_status(self) -> dict:
-        """Get current add-on status"""
-        secure_status = self.secure_config.get_status_info()
+        """Get your personal add-on status"""
+        personal_status = self.personal_config.get_status_info()
         
         return {
             'voice_controls_active': True,  # Always active (auto-injected)
-            'api_key_configured': secure_status['configured'],
-            'api_key_source': secure_status.get('source', 'none'),
-            'voice_id': 'cgSgspJ2msm6clMCkdW9',
-            'auto_injection': True
+            'api_key_configured': personal_status['configured'],
+            'api_key_source': personal_status.get('source', 'none'),
+            'voice_id': self.personal_config.get_voice_id(),
+            'auto_injection': True,
+            'personal_edition': True
         }
 
-# Global addon instance
-addon_instance: Optional[CompleteVoiceReviewAddon] = None
+# Global personal addon instance
+addon_instance: Optional[PersonalVoiceReviewAddon] = None
 
-def get_addon() -> CompleteVoiceReviewAddon:
-    """Get the global addon instance"""
+def get_personal_addon() -> PersonalVoiceReviewAddon:
+    """Get your personal addon instance"""
     global addon_instance
     if addon_instance is None:
-        addon_instance = CompleteVoiceReviewAddon()
+        addon_instance = PersonalVoiceReviewAddon()
     return addon_instance
 
 # Initialize when module is imported
 if ANKI_AVAILABLE:
-    addon_instance = get_addon()
+    addon_instance = get_personal_addon()
 
 # Export for other modules
-__all__ = ['CompleteVoiceReviewAddon', 'get_addon', 'ANKI_AVAILABLE'] 
+__all__ = ['PersonalVoiceReviewAddon', 'get_personal_addon', 'ANKI_AVAILABLE'] 
